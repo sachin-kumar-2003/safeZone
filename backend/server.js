@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
 require('dotenv').config();
 
 
@@ -16,6 +17,9 @@ connectDB();
 app.listen(port, ()=>{
     console.log(`server started on port ${port}`);
 })
+
+app.use('/api/auth', authRoutes);
+
 
 app.get('/', (req,res)=>{
     res.send('hello from backend');

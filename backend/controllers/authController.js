@@ -4,9 +4,16 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async ( req , res ) =>{
     const {username , email , password} = req.body;
+
+    if(!username || !email || !password){
+        return res.status(400).json({
+            message: 'Username, email, and password are required'
+        });
+    }
+
     try {
         const existUser = await User.find({email});
-        if(existUser){
+        if(existUser.length > 0){
             return res.status(400).json(
                 {
                     message : "user already exists"
@@ -14,11 +21,13 @@ exports.register = async ( req , res ) =>{
             )
         }
         const passwordHash = await bcrypt.hash(password , 10);
-        const newUser = new User.create({
+        const newUser = new User({
             username,
             email,
-            passwordHash
+            passwordHash,
+            trustScore: 50
         });
+        await newUser.save();
 
         const token = jwt.sign(
             {userId : newUser._id},
@@ -38,6 +47,13 @@ exports.register = async ( req , res ) =>{
 
 exports.login = async ( req , res ) =>{
     const {email , password } = req.body;
+
+    if(!email || !password){
+        return res.status(400).json({
+            message: 'Email and password are required'
+        });
+    }
+
     try{
         const user = await User.find({email});
         if(!user){
@@ -45,11 +61,11 @@ exports.login = async ( req , res ) =>{
                 message:"user not found"
             })
         }
-        const isMatch = await bcrypt.compare( password , user.passwordHash );
-        if(!isMatch){
-            return res.status(400).json({
-                message: "invalid credentials"
-            })
+        const isPasswordValid = await bcrypt.compare(password, user[0].passwordHash);
+        if(!isPasswordValid){
+            return res.status(401).json({
+                message: 'Invalid credentials'
+            });
         }
         const token = jwt.sign(
             {userId: user._id},

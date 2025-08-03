@@ -75,7 +75,8 @@ exports.getAlerts = async (req , res) =>{
 }
 
 exports.deleteAlert = async (req, res) => {
-    const { alertId } = req.params;
+    const { alertId } = req.params.id;
+    console.log('Deleting alert with ID:', alertId);
     try {
         const alert = await Alert.findByIdAndDelete(alertId);
         if(!alert) {
@@ -139,7 +140,9 @@ exports.updateAlert = async ( req , res ) =>{
 }
 
 exports.getAlertById = async (req, res) => {
-    const { alertId } = req.params;
+    console.log("enter get alert by id");
+    const { alertId } = req.params._id;
+    console.log('Fetching alert with ID:', alertId);
     try {
         const alert = await Alert.findById(alertId).populate('userId', 'username email');
         if(!alert) {
@@ -160,9 +163,18 @@ exports.getAlertById = async (req, res) => {
     }
 }
 
-exports.getallAlerts = async (req, res) => {
+exports.getUserAlerts = async (req, res) => {
+
+    console.log('Fetching user alerts for user:', req.user._id);
+    if(!req.user || !req.user._id) {
+        return res.status(401).json({
+            message: 'Unauthorized'
+        });
+    }
+
     try {
-        const alerts = await Alert.find().populate('userId', 'username email');
+        const userId = req.user._id;
+        const alerts = await Alert.find({ userId }).populate('userId', 'username email');
         return res.status(200).json({
             message: 'All alerts fetched successfully',
             alerts

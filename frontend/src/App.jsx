@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const socket = io("http://localhost:3000");
 
 export default function App() {
-  const { user } = useContext(AuthContext);
+  const { user  } = useContext(AuthContext);
   useEffect(() => {
     if( user ){
       socket.emit("registerSocket", user._id);
@@ -25,9 +25,10 @@ export default function App() {
     socket.on('newAlert', (alert) => {
       console.log('New alert posted:', alert);
     });
-
-    return () =>{
-      socket.disconnect();
+    if( ! user ){
+      return () =>{
+        socket.disconnect();
+      }
     }
 
   }, [user]);

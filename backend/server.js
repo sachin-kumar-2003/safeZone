@@ -1,10 +1,11 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+
+require('dotenv').config();
 
 
 app = express();
@@ -24,11 +25,12 @@ const io = new Server(server, {
         allowedHeaders: ['Content-Type'],
     }
 })
+const connectedUsers  = new Map();
 
 io.on('connection', (socket) =>{
     console.log('a user connected', socket.id);
 
-    socket.on('register' , async(userId) =>{
+    socket.on('registerSocket' , async(userId) =>{
         await User.findByIdAndUpdate(userId , { socketId: socket.id }, { new: true });
         console.log(`User with ID ${userId} registered with socket ID ${socket.id}`);
     })
@@ -43,15 +45,18 @@ io.on('connection', (socket) =>{
         io.emit('new alert', alert);
     });
 })
+
 app.set('io', io);
+app.set('connectedUsers', connectedUsers);
 
 
 const port = process.env.PORT ;
 
 connectDB();
-app.listen(port, ()=>{
-    console.log(`server started on port ${port}`);
-})
+
+server.listen(process.env.PORT, () => {
+  console.log(`Server with Socket.IO running on port ${process.env.PORT}`);
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/alert', alertRoutes);

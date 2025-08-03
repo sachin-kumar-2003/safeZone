@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState , useEffect } from 'react';
 import api from '../service/api';
 
 export default function CreateAlertForm() {
+
   const [alertType, setAlertType] = useState('');
   const [description, setDescription] = useState('');
   const [coordinates, setCoordinates] = useState([77.2090, 28.6139]);
 
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+    setCoordinates([position.coords.longitude, position.coords.latitude]);
+    });
+  }, []);
+  
   const handleSubmit = async (e) => {
         e.preventDefault();
         console.log(coordinates);

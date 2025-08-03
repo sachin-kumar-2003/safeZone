@@ -60,44 +60,32 @@ exports.createAlert = async ( req , res ) =>{
 
 }
 
-exports.getAlerts = async (req , res) =>{
-    try {
-        const alerts = await Alert.find().populate('userId', 'username email');
-        return res.status(200).json({
-            message: 'Alerts fetched successfully',
-            alerts
-        });
-        
-    } catch (error) {
-        console.error('Error fetching alerts:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-}
 
 exports.deleteAlert = async (req, res) => {
-    const { alertId } = req.params.id;
-    console.log('Deleting alert with ID:', alertId);
-    try {
-        const alert = await Alert.findByIdAndDelete(alertId);
-        if(!alert) {
-            return res.status(404).json({
-                message: 'Alert not found'
-            })
-        }
-        return res.status(200).json({
-            message: 'Alert deleted successfully'
-        });
-        
-    } catch (error) {
-        console.error('Error deleting alert:', error);
-        res.status(500).json({
-            message: 'Internal server error' 
-        });
+  const alertId = req.params.id; 
+  console.log('Deleting alert with ID:', alertId);
+  try {
+    const alert = await Alert.findByIdAndDelete(alertId);
+    if (!alert) {
+      return res.status(404).json({
+        message: 'Alert not found'
+      });
     }
-}
+    return res.status(200).json({
+      message: 'Alert deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting alert:', error);
+    res.status(500).json({
+      message: 'Internal server error'
+    });
+  }
+};
+
 
 exports.updateAlert = async ( req , res ) =>{
-    const { alertId }  = req.params;
+    const  alertId   = req.params.id;
     const { alertType, description, cordinates } = req.body;
     try {
         const alert = await Alert.findById(alertId);
@@ -141,7 +129,7 @@ exports.updateAlert = async ( req , res ) =>{
 
 exports.getAlertById = async (req, res) => {
     console.log("enter get alert by id");
-    const { alertId } = req.params._id;
+    const  alertId  = req.params.id;
     console.log('Fetching alert with ID:', alertId);
     try {
         const alert = await Alert.findById(alertId).populate('userId', 'username email');
@@ -164,14 +152,7 @@ exports.getAlertById = async (req, res) => {
 }
 
 exports.getUserAlerts = async (req, res) => {
-
-    console.log('Fetching user alerts for user:', req.user._id);
-    if(!req.user || !req.user._id) {
-        return res.status(401).json({
-            message: 'Unauthorized'
-        });
-    }
-
+    console.log(req.user._id);
     try {
         const userId = req.user._id;
         const alerts = await Alert.find({ userId }).populate('userId', 'username email');

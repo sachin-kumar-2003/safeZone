@@ -1,5 +1,6 @@
 import { useState , useEffect } from 'react';
 import api from '../service/api';
+import { toast } from 'react-toastify';
 
 export default function CreateAlertForm() {
 
@@ -22,10 +23,13 @@ export default function CreateAlertForm() {
             description,
             cordinates: coordinates
         });
-        alert('Alert created!');
+        // alert('Alert created!');
+        toast.success('Alert created successfully!');
+
         } catch (err) {
         console.error(err);
-        alert(err.response?.data?.message || 'Error');
+        // alert(err.response?.data?.message || 'Error');
+        toast.error(err.response?.data?.message || 'Error creating alert');
         }
   };
 

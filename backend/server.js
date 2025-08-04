@@ -66,3 +66,4 @@ app.use('/api/alert', alertRoutes);
 app.get('/', (req,res)=>{
     res.send('hello from backend');
 })
+

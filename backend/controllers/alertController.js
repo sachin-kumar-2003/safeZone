@@ -2,7 +2,7 @@ const User = require('../models/User');
 const Alert = require('../models/Alert');
 
 exports.createAlert = async ( req , res ) =>{
-    
+    const io = req.app.get('io');
     const { alertType , description, cordinates } = req.body;
     console.log(alertType, description, cordinates);
     
@@ -24,7 +24,7 @@ exports.createAlert = async ( req , res ) =>{
             }
         })
         await newAlert.save();
-        // io.emit('new alert' , newAlert); 
+        io.emit('new alert' , newAlert); 
 
         const nearbyUser = await User.find({
             location:{
@@ -38,11 +38,11 @@ exports.createAlert = async ( req , res ) =>{
             }
         })
 
-        // nearbyUser.forEach( user => {
-        //     if( user.socketId ){
-        //         io.to(user.socketId).emit(' New Alert Notification', newAlert);
-        //     }
-        // })
+        nearbyUser.forEach( user => {
+            if( user.socketId ){
+                io.to(user.socketId).emit(' New Alert Notification', newAlert);
+            }
+        })
 
         return res.status(201).json({
             message: ' Alert created/Sent successfully',
@@ -166,5 +166,20 @@ exports.getUserAlerts = async (req, res) => {
             message: 'Internal server error'
         });
         
+    }
+}
+
+exports.getAllAlerts = async (req, res) => {
+    try {
+        const alerts = await Alert.find().populate('userId', 'username email');
+        return res.status(200).json({
+            message: 'All alerts fetched successfully',
+            alerts
+        });
+    } catch (error) {
+        console.error('Error fetching all alerts:', error);
+        res.status(500).json({
+            message: 'Internal server error'
+        });
     }
 }

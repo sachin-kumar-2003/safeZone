@@ -6,17 +6,35 @@ import 'leaflet/dist/leaflet.css';
 import { AuthContext } from '../context/AuthContext';
 import RecenterButton from './RecenterButton';
 
+
+
+
 export default function MapView() {
+
+
   const [alerts, setAlerts] = useState([]);
   const { user } = useContext(AuthContext);
 
-  const [position, setPosition] = useState([28.6139, 77.2090]); 
-
+  const [position, setPosition] =  useState([30.3165, 78.0322]);
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((pos) => {
       setPosition([pos.coords.latitude, pos.coords.longitude]);
     });
   }, []);
+
+  useEffect( ()=>{
+    const fetchAlerts = async () =>{
+      try {
+        const res = await api.get('/alert');
+        setAlerts(res.data.alerts);
+      } catch (error) {
+        console.error('Error fetching alerts:', error);        
+      }
+    }
+    fetchAlerts();
+  },[]);
+
+
 
   useEffect(() => {
     socket.on('new alert', (alert) => {

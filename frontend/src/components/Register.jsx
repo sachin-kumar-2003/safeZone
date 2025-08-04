@@ -1,6 +1,7 @@
 import { useState,useContext } from "react";
 import api from "../service/api";
 import { AuthContext } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 
 export default function Register(){
@@ -24,11 +25,14 @@ export default function Register(){
             const res = await api.post("/auth/register", form);
             if(res.data){
                 login(res.data);
-                alert("Registration successful!");
+                // alert("Registration successful!");
+                toast.success("Registration successful!");
+
             }
         } catch (error) {
             console.error("Registration error:", error);
-            alert("Registration failed. Please try again.");
+            // alert("Registration failed. Please try again.");
+            toast.error(error.response?.data?.message || "Registration failed");
         }
     };
 

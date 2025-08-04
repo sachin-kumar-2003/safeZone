@@ -5,6 +5,7 @@ import { AuthContext, AuthContextProvider } from './context/AuthContext';
 import Register from './components/Register';
 import Login from './components/Login';
 import MapView from './components/MapView';
+import Profile from './components/Profile';
 import CreateAlertForm from './components/CreateAlertForm';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -35,32 +36,69 @@ export default function App() {
   
   const { logout } = useContext(AuthContext);
   return (
-    <Router>
-      <nav className="flex space-x-4 p-4 bg-gray-200">
-        <Link to="/" className="text-blue-600">Map</Link>
+  <Router>
+    <nav className="flex items-center justify-between p-4 bg-gray-100 shadow">
+      <div className="flex items-center space-x-6">
+        <Link to="/" className="text-xl font-bold text-blue-700">Map</Link>
+        {user && (
+          <Link to="/create" className="text-blue-600 hover:underline">Create Alert</Link>
+        )}
+      </div>
+
+      <div className="flex items-center space-x-4">
         {user ? (
-          <>
-            <Link to="/create" className="text-blue-600">Create Alert</Link>
-            <button onClick={logout} className="text-red-600">Logout</button>
-          </>
+          <div className="relative group">
+            <button className="flex items-center space-x-2 text-blue-700 focus:outline-none">
+              <span>{user.name || "Profile"}</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <div className="absolute right-0 hidden mt-2 w-40 bg-white border rounded shadow-md group-hover:block">
+              <Link
+                to="/profile"
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                My Profile
+              </Link>
+              <button
+                onClick={logout}
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
         ) : (
           <>
-            <Link to="/register" className="text-blue-600">Register</Link>
-            <Link to="/login" className="text-blue-600">Login</Link>
+            <Link to="/register" className="text-blue-600 hover:underline">Register</Link>
+            <Link to="/login" className="text-blue-600 hover:underline">Login</Link>
           </>
         )}
-      </nav>
+      </div>
+    </nav>
 
-      <Routes>
-        <Route path="/" element={<MapView />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/create" element={<CreateAlertForm />} />
-      </Routes>
+    <Routes>
+      <Route path="/" element={<MapView />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/create" element={<CreateAlertForm />} />
+      <Route path="/profile" element={<Profile />} />
+    </Routes>
 
-      <ToastContainer />
-    </Router>
-   
-  );
+    <ToastContainer />
+  </Router>
+);
+
 }
 export { socket };

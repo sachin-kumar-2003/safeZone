@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import api from "../service/api";
+import { toast } from "react-toastify";
 
 export default function Login() {
     const [ form , setForm ] = useState({
@@ -23,11 +24,12 @@ export default function Login() {
             const res = await api.post("/auth/login", form);
             if(res.data){
                 login(res.data);
-                alert("login successfull");
+                toast.success("Login successful!");
             }
         } catch ( error ){
             console.error("Login error:", error);
-            alert("Login failed. Please check your credentials and try again.");
+            // alert("Login failed. Please check your credentials and try again.");
+            toast.error(error.response?.data?.message || "Login failed");
         }
     }
       return (

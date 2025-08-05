@@ -27,6 +27,7 @@ export default function Register(){
                 login(res.data);
                 // alert("Registration successful!");
                 toast.success("Registration successful!");
+                window.location.href = "/login";
 
             }
         } catch (error) {

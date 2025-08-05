@@ -1,4 +1,4 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext ,useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import io from 'socket.io-client';
 import { AuthContext, AuthContextProvider } from './context/AuthContext';
@@ -6,6 +6,7 @@ import Register from './components/Register';
 import Login from './components/Login';
 import MapView from './components/MapView';
 import Profile from './components/Profile';
+import Allalerts from './components/Allalerts';
 import CreateAlertForm from './components/CreateAlertForm';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,6 +15,7 @@ const socket = io("http://localhost:3000");
 
 export default function App() {
   const { user  } = useContext(AuthContext);
+  const [showProfile, setShowProfile] = useState(false);
   useEffect(() => {
     if( user ){
       socket.emit("registerSocket", user._id);
@@ -45,11 +47,11 @@ export default function App() {
         )}
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 ">
         {user ? (
           <div className="relative group">
-            <button className="flex items-center space-x-2 text-blue-700 focus:outline-none">
-              <span>{user.name || "Profile"}</span>
+            <button className="flex items-center space-x-2 text-blue-700 focus:outline-none " onClick={() => setShowProfile(!showProfile)}>
+              <span>{user.username || "Profile"}</span>
               <svg
                 className="w-4 h-4"
                 fill="none"
@@ -64,7 +66,7 @@ export default function App() {
                 />
               </svg>
             </button>
-            <div className="absolute right-0 hidden mt-2 w-40 bg-white border rounded shadow-md group-hover:block">
+            {showProfile && <div className="z-30 absolute right-0 hidden mt-0 w-40 bg-white border rounded shadow-md group-hover:block">
               <Link
                 to="/profile"
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -77,7 +79,7 @@ export default function App() {
               >
                 Logout
               </button>
-            </div>
+            </div>}
           </div>
         ) : (
           <>
@@ -94,6 +96,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/create" element={<CreateAlertForm />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/alerts" element={<Allalerts />} />
     </Routes>
 
     <ToastContainer />

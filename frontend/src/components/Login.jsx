@@ -5,34 +5,38 @@ import api from "../service/api";
 import { toast } from "react-toastify";
 
 export default function Login() {
-    const [ form , setForm ] = useState({
-        email: "",
-        password: ""
+  const [form, setForm] = useState({
+    email: "",
+    password: ""
+  });
+  const { login } = useContext(AuthContext);
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
     });
-    const { login } = useContext(AuthContext);
+  }
 
-    const handleChange = (e) => {
-        setForm({
-            ...form,
-            [e.target.name]: e.target.value
-        });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.post("/auth/login", form);
+      if (res.data?.user && res.data?.token) {
+        const fullUser = {
+          ...res.data.user,
+          token: res.data.token
+        };
+        login(fullUser);
+        toast.success("Login successful");
+        window.location.href = "/";
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
     }
+  };
 
-    const handleSubmit = async (e) =>{
-        e.preventDefault();
-        try {
-            const res = await api.post("/auth/login", form);
-            if(res.data){
-                login(res.data);
-                toast.success("Login successful!");
-            }
-        } catch ( error ){
-            console.error("Login error:", error);
-            // alert("Login failed. Please check your credentials and try again.");
-            toast.error(error.response?.data?.message || "Login failed");
-        }
-    }
-      return (
+  return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <h2 className="text-xl font-bold">Login</h2>
       <input
@@ -56,5 +60,5 @@ export default function Login() {
       </button>
     </form>
   );
-    
+
 }

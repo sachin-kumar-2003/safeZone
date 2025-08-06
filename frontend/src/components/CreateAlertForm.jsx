@@ -25,6 +25,7 @@ export default function CreateAlertForm() {
         });
         // alert('Alert created!');
         toast.success('Alert created successfully!');
+        window.location.href = "/";
 
         } catch (err) {
         console.error(err);

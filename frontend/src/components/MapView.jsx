@@ -46,7 +46,7 @@ export default function MapView() {
       };
       fetchAlerts();
     }
-  }, [user]);
+  }, []);
 
 return (
   <div className="relative w-full h-screen bg-gradient-to-b mt-0 from-blue-100 to-gray-100 -z-0 ">

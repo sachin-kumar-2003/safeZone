@@ -7,10 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import RecenterButton from './RecenterButton';
 import {toast} from 'react-toastify';
 
-
 export default function MapView() {
-
-
 
   const [alerts, setAlerts] = useState([]);
   const { user } = useContext(AuthContext);

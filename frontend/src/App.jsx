@@ -21,12 +21,9 @@ export default function App() {
       socket.emit("registerSocket", user._id);
     }
 
-    socket.on("newNearbyAlert", (alert) =>{
-      console.log("New alert received:", alert.description);
-    })
-
-    socket.on('newAlert', (alert) => {
+    socket.on('new alert', (alert) => {
       console.log('New alert posted:', alert);
+      toast.success("new alert posted");
     });
     if( ! user ){
       return () =>{

@@ -10,6 +10,7 @@ import Allalerts from './components/Allalerts';
 import CreateAlertForm from './components/CreateAlertForm';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import CameraAlert from './components/CameraAlert';
 
 const socket = io("http://localhost:3000");
 
@@ -41,6 +42,9 @@ export default function App() {
         <Link to="/" className="text-xl font-bold text-blue-700">Map</Link>
         {user && (
           <Link to="/create" className="text-blue-600 hover:underline">Create Alert</Link>
+        )}
+        {user && (
+          <Link to="/camera" className='text-blue-600 hover:underline'>Camera</Link>
         )}
       </div>
 
@@ -94,6 +98,7 @@ export default function App() {
       <Route path="/create" element={<CreateAlertForm />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/alerts" element={<Allalerts />} />
+      <Route path='/camera' element={<CameraAlert />}></Route>
     </Routes>
 
     <ToastContainer />

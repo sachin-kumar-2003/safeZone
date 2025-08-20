@@ -33,6 +33,46 @@ export default function CameraAlert() {
         toast.info("Camera closed");
     };
     function processImage() {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async (blob)=>{
+            if(blob){
+                const imageUrl = URL.createObjectURL(blob);
+                setCapturedImage(imageUrl)
+
+                const formData = new FormData();
+
+                formData.append("file", blob, "frame.jpg");
+
+                try {
+                    const res = await fetch("http://127.0.0.1:8000/detect",
+                        {
+                            method:"post",
+                            body:formData
+                        }
+                    )
+                    if(!res.ok){
+                        toast.error("something is wrong while fetching api");
+                        throw new Error("something is wrong while fetching APi..");
+                    }  
+                    
+                    const data = await res.json();
+                    console.log("AI Response:", data);
+                } catch (error) {
+                    return {
+                        message:"something is wrong"
+                    }
+                }
+
+            }
+        })
+
         toast.success("image is processing");
     }
 

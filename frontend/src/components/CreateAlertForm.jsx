@@ -1,4 +1,4 @@
-import { useState , useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../service/api';
 import { toast } from 'react-toastify';
 
@@ -10,28 +10,28 @@ export default function CreateAlertForm() {
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
-    setCoordinates([position.coords.longitude, position.coords.latitude]);
+      setCoordinates([position.coords.longitude, position.coords.latitude]);
     });
   }, []);
-  
-  const handleSubmit = async (e) => {
-        e.preventDefault();
-        console.log(coordinates);
-        try {
-        await api.post('/alert/create', {
-            alertType,
-            description,
-            cordinates: coordinates
-        });
-        // alert('Alert created!');
-        toast.success('Alert created successfully!');
-        window.location.href = "/";
 
-        } catch (err) {
-        console.error(err);
-        // alert(err.response?.data?.message || 'Error');
-        toast.error(err.response?.data?.message || 'Error creating alert');
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(coordinates);
+    try {
+      await api.post('/alert/create', {
+        alertType,
+        description,
+        cordinates: coordinates
+      });
+      // alert('Alert created!');
+      toast.success('Alert created successfully!');
+      window.location.href = "/";
+
+    } catch (err) {
+      console.error(err);
+      // alert(err.response?.data?.message || 'Error');
+      toast.error(err.response?.data?.message || 'Error creating alert');
+    }
   };
 
   return (

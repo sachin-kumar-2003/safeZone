@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { toast } from "react-toastify"
 import api from '../service/api';
+import axios from 'axios';
 
 export default function CameraAlert() {
     const videoRef = useRef(null);
@@ -65,22 +66,26 @@ export default function CameraAlert() {
                     }
 
                     const data = await res.json();
-                    console.log("AI Response:", data);
-                    if (data.detections && data.detections.length > 0) {
+                    console.log("AI Response:", data.detections);
+                    console.log("length of arrayy", data.detections.length);
+                    if (data.detections.length > 0) {
 
-
-                        const alertType = "Camera";
+                        const alertType = "Other";
                         const description = "Danger detected via camera";
+                        console.log(alertType);
+                        console.log(description);
 
                         try {
+                            console.log("entering")
                             await api.post('/alert/create', {
-                                alertType,
-                                description,
-                                coordinate:coordinates
+                                alertType: "Other",
+                                description: "Detected unusual fire activity",
+                                cordinates:coordinates 
                             });
                             toast.success('Danger alert created!');
                             window.location.href = "/";
                         } catch (error) {
+                            console.log(error)
                             toast.error("Failed to create alert");
                         }
                     } else {

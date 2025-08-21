@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { toast } from "react-toastify"
+import api from '../service/api';
 
 export default function CameraAlert() {
     const videoRef = useRef(null);
@@ -8,6 +9,7 @@ export default function CameraAlert() {
     const [capturedImage, setCapturedImage] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [result, setResult] = useState('');
+    const [coordinates, setCoordinates] = useState([77.2090, 28.6139]);
 
     const startCamera = async () => {
         try {
@@ -41,8 +43,8 @@ export default function CameraAlert() {
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        canvas.toBlob(async (blob)=>{
-            if(blob){
+        canvas.toBlob(async (blob) => {
+            if (blob) {
                 const imageUrl = URL.createObjectURL(blob);
                 setCapturedImage(imageUrl)
 
@@ -53,26 +55,45 @@ export default function CameraAlert() {
                 try {
                     const res = await fetch("http://127.0.0.1:8000/detect",
                         {
-                            method:"post",
-                            body:formData
+                            method: "post",
+                            body: formData
                         }
                     )
-                    if(!res.ok){
+                    if (!res.ok) {
                         toast.error("something is wrong while fetching api");
                         throw new Error("something is wrong while fetching APi..");
-                    }  
-                    
+                    }
+
                     const data = await res.json();
                     console.log("AI Response:", data);
+                    if (data.detections && data.detections.length > 0) {
+
+
+                        const alertType = "Camera";
+                        const description = "Danger detected via camera";
+
+                        try {
+                            await api.post('/alert/create', {
+                                alertType,
+                                description,
+                                coordinate:coordinates
+                            });
+                            toast.success('Danger alert created!');
+                            window.location.href = "/";
+                        } catch (error) {
+                            toast.error("Failed to create alert");
+                        }
+                    } else {
+                        toast.info("No danger detected");
+                    }
                 } catch (error) {
                     return {
-                        message:"something is wrong"
+                        message: "something is wrong"
                     }
                 }
 
             }
         })
-
         toast.success("image is processing");
     }
 

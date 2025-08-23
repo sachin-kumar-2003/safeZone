@@ -65,25 +65,25 @@ export default function CameraAlert() {
                         throw new Error("something is wrong while fetching APi..");
                     }
 
-                    const data = await res.json();
-                    console.log("AI Response:", data.detections);
-                    console.log("length of arrayy", data.detections.length);
-                    if (data.detections.length > 0) {
-
-                        const alertType = "Other";
-                        const description = "Danger detected via camera";
+                    const detectionRes = await res.json();
+                    console.log("AI Response:", detectionRes.detections);
+                    console.log("length of arrayy", detectionRes.detections.length);
+                    if (detectionRes.detections.length > 0) {
+                        
+                        setCoordinates([detectionRes.cordinates.longitude, detectionRes.cordinates.latitude])
+                        const alertType = detectionRes.detections[0].class;
+                        const description = `detected ${detectionRes.detections[0].class} via camera`;
                         console.log(alertType);
                         console.log(description);
 
                         try {
-                            console.log("entering")
                             await api.post('/alert/create', {
                                 alertType: "Other",
                                 description: "Detected unusual fire activity",
                                 cordinates:coordinates 
                             });
                             toast.success('Danger alert created!');
-                            window.location.href = "/";
+                            // window.location.href = "/";
                         } catch (error) {
                             console.log(error)
                             toast.error("Failed to create alert");

@@ -1,12 +1,12 @@
-from fastapi import FastAPI, UploadFile, File  
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
 import shutil
+import requests
 from pathlib import Path
 from fastapi.responses import JSONResponse
-          
-app = FastAPI()
 
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,28 +16,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = YOLO("yolov8n.pt")
+model = YOLO("./models/firedetect-11x.pt")
 
+
+    
 
 @app.get("/")
 def home():
-    return {"message": "AI Danger Detection API is running "}
+    return {"message": "AI Danger Detection API is running"}
+
 
 @app.post("/detect")
-async def detect(file : UploadFile = File(...)):
+async def detect(file:UploadFile=File(...)):
     try:
-        print("image is detecting....")
         temp_file = Path(f"temp_{file.filename}")
-        with open(temp_file , "wb") as buffer:
+        with temp_file.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        results = model.predict(source=str(temp_file))
+        results = model.predict(source=str(temp_file), save=True, conf=0.5)
+
         detections = []
-        for result in results:
-            for box in result.boxes:
-                cls_id = int(box.cls[0])   
-                label = model.names[cls_id]  
-                conf = float(box.conf[0])   
-                detections.append({"label": label, "confidence": round(conf, 2)})
+        for r in results:
+            for box in r.boxes:
+                detections.append({
+                    "class": model.names[int(box.cls)],
+                    "confidence": float(box.conf),
+                    "bbox": box.xyxy.tolist()[0]
+                })
+
+        temp_file.unlink(missing_ok=True)
+
         return JSONResponse(content={"detections": detections})
-    except:
-        return JSONResponse(content={"Error":"something is wrong while calling api"})
+
+    except Exception as e:
+        return JSONResponse(content={"error": f"Something went wrong: {str(e)}"}, status_code=500)

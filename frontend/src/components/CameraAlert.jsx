@@ -12,6 +12,8 @@ export default function CameraAlert() {
     const [result, setResult] = useState('');
     const [coordinates, setCoordinates] = useState([77.2090, 28.6139]);
 
+
+
     const startCamera = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -69,18 +71,20 @@ export default function CameraAlert() {
                     console.log("AI Response:", detectionRes.detections);
                     console.log("length of arrayy", detectionRes.detections.length);
                     if (detectionRes.detections.length > 0) {
-                        
-                        setCoordinates([detectionRes.cordinates.longitude, detectionRes.cordinates.latitude])
+
                         const alertType = detectionRes.detections[0].class;
                         const description = `detected ${detectionRes.detections[0].class} via camera`;
                         console.log(alertType);
                         console.log(description);
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            setCoordinates([position.coords.longitude, position.coords.latitude]);
+                        });
 
                         try {
                             await api.post('/alert/create', {
-                                alertType: "Other",
-                                description: "Detected unusual fire activity",
-                                cordinates:coordinates 
+                                alertType: alertType,
+                                description: description,
+                                cordinates: coordinates
                             });
                             toast.success('Danger alert created!');
                             // window.location.href = "/";

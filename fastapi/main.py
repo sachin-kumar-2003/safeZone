@@ -17,7 +17,7 @@ app.add_middleware(
 )
 
 model = YOLO("./models/firedetect-11x.pt")
-
+accident_model = YOLO("./models/best.pt")
 
     
 
@@ -25,20 +25,32 @@ model = YOLO("./models/firedetect-11x.pt")
 def home():
     return {"message": "AI Danger Detection API is running"}
 
-
 @app.post("/detect")
-async def detect(file:UploadFile=File(...)):
+async def detect(file: UploadFile = File(...)):
     try:
         temp_file = Path(f"temp_{file.filename}")
         with temp_file.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        results = model.predict(source=str(temp_file), save=True, conf=0.5)
+
+        fire_results = model.predict(source=str(temp_file), save=True, conf=0.5)
+        accident_results = accident_model.predict(source=str(temp_file), save=True, conf=0.5)
 
         detections = []
-        for r in results:
+
+        for r in fire_results:
             for box in r.boxes:
                 detections.append({
-                    "class": model.names[int(box.cls)],
+                    "model": "fire_smoke",
+                    "class": r.names[int(box.cls)],
+                    "confidence": float(box.conf),
+                    "bbox": box.xyxy.tolist()[0]
+                })
+
+        for r in accident_results:
+            for box in r.boxes:
+                detections.append({
+                    "model": "accident",
+                    "class": r.names[int(box.cls)],
                     "confidence": float(box.conf),
                     "bbox": box.xyxy.tolist()[0]
                 })

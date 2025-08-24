@@ -1,10 +1,9 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from ultralytics import YOLO
 import shutil
-import requests
 from pathlib import Path
-from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
@@ -16,14 +15,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-model = YOLO("./models/firedetect-11x.pt")
-accident_model = YOLO("./models/best.pt")
+# Load models
+fire_model = YOLO("./models/firedetect-11x.pt")
+accident_model = YOLO("./models/epoch14.pt")
 
-    
 
 @app.get("/")
 def home():
     return {"message": "AI Danger Detection API is running"}
+
 
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
@@ -32,28 +32,25 @@ async def detect(file: UploadFile = File(...)):
         with temp_file.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        fire_results = model.predict(source=str(temp_file), save=True, conf=0.5)
-        accident_results = accident_model.predict(source=str(temp_file), save=True, conf=0.5)
-
         detections = []
 
-        for r in fire_results:
-            for box in r.boxes:
-                detections.append({
-                    "model": "fire_smoke",
-                    "class": r.names[int(box.cls)],
-                    "confidence": float(box.conf),
-                    "bbox": box.xyxy.tolist()[0]
-                })
+        fire_results = fire_model(temp_file, conf=0.5)
+        for box in fire_results[0].boxes:
+            detections.append({
+                "model": "fire_smoke",
+                "class": fire_results[0].names[int(box.cls)],
+                "confidence": float(box.conf),
+                "bbox": box.xyxy.tolist()[0]
+            })
 
-        for r in accident_results:
-            for box in r.boxes:
-                detections.append({
-                    "model": "accident",
-                    "class": r.names[int(box.cls)],
-                    "confidence": float(box.conf),
-                    "bbox": box.xyxy.tolist()[0]
-                })
+        accident_results = accident_model(temp_file, conf=0.5)
+        for box in accident_results[0].boxes:
+            detections.append({
+                "model": "accident",
+                "class": accident_results[0].names[int(box.cls)],
+                "confidence": float(box.conf),
+                "bbox": box.xyxy.tolist()[0]
+            })
 
         temp_file.unlink(missing_ok=True)
 

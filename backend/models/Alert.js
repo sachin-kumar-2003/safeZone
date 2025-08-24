@@ -10,7 +10,7 @@ const alertSchema = new mongoose.Schema({
   alertType: { 
     type: String, 
     required: true,
-    enum: ['Accident', 'Protest', 'Fire', 'Roadblock', 'Crime', 'Other']
+    enum: ['accident', 'Protest', 'Fire', 'Roadblock', 'Crime', 'Smoke', 'Other']
   },
 
   description: { 

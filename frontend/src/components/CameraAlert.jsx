@@ -13,6 +13,18 @@ export default function CameraAlert() {
     const [coordinates, setCoordinates] = useState([77.2090, 28.6139]);
 
 
+    React.useEffect(() => {
+        let interval;
+        if (streaming) {
+            interval = setInterval(() => {
+                processImage();
+            }, 2000);
+        } else {
+            clearInterval(interval);
+        }
+        return () => clearInterval(interval);
+    }, [streaming]);
+
 
     const startCamera = async () => {
         try {

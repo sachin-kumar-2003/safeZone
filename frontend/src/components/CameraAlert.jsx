@@ -15,6 +15,11 @@ export default function CameraAlert() {
 
     React.useEffect(() => {
         let interval;
+        // set the current location cordinate
+        navigator.geolocation.getCurrentPosition((position) => {
+            setCoordinates([position.coords.longitude, position.coords.latitude]);
+        });
+
         if (streaming) {
             interval = setInterval(() => {
                 processImage();
@@ -105,7 +110,7 @@ export default function CameraAlert() {
                             toast.error("Failed to create alert");
                         }
                     } else {
-                        toast.info("No danger detected");
+                        // toast.info("No danger detected");
                     }
                 } catch (error) {
                     return {
@@ -115,7 +120,7 @@ export default function CameraAlert() {
 
             }
         })
-        toast.success("image is processing");
+        // toast.success("image is processing");
     }
 
 

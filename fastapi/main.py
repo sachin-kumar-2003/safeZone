@@ -1,60 +1,40 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from ultralytics import YOLO
-import shutil
-from pathlib import Path
+import io
+
+import torch
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from PIL import Image
+from transformers import AutoImageProcessor, AutoModelForImageClassification
+
+# Load model (no login needed for public models)
+MODEL_ID = "shawnmichael/vit-fire-smoke-detection-v4"
+processor = AutoImageProcessor.from_pretrained(MODEL_ID)
+model = AutoModelForImageClassification.from_pretrained(MODEL_ID)
+model.eval()
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Load models
-fire_model = YOLO("./models/firedetect-11x.pt")
-accident_model = YOLO("./models/epoch14.pt")
-
-
-@app.get("/")
-def home():
-    return {"message": "AI Danger Detection API is running"}
-
-
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
-    try:
-        temp_file = Path(f"temp_{file.filename}")
-        with temp_file.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
 
-        detections = []
+    img_bytes = await file.read()
+    if not img_bytes:
+        raise HTTPException(status_code=400, detail="Empty file")
 
-        fire_results = fire_model(temp_file, conf=0.5)
-        for box in fire_results[0].boxes:
-            detections.append({
-                "model": "fire_smoke",
-                "class": fire_results[0].names[int(box.cls)],
-                "confidence": float(box.conf),
-                "bbox": box.xyxy.tolist()[0]
-            })
+    image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
 
-        accident_results = accident_model(temp_file, conf=0.5)
-        for box in accident_results[0].boxes:
-            detections.append({
-                "model": "accident",
-                "class": accident_results[0].names[int(box.cls)],
-                "confidence": float(box.conf),
-                "bbox": box.xyxy.tolist()[0]
-            })
+    inputs = processor(images=image, return_tensors="pt")
 
-        temp_file.unlink(missing_ok=True)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        probs = torch.softmax(outputs.logits, dim=-1)[0]
 
-        return JSONResponse(content={"detections": detections})
+    predicted_id = int(torch.argmax(probs))
+    label = model.config.id2label[predicted_id]
+    score = float(probs[predicted_id])
 
-    except Exception as e:
-        return JSONResponse(content={"error": f"Something went wrong: {str(e)}"}, status_code=500)
+    return {
+        "label": label,      # e.g. "fire", "smoke", "normal"
+        "score": score       # confidence 0–1
+    }

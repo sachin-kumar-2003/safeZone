@@ -1,21 +1,15 @@
 import io
-import os
 import asyncio
 import torch
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModelForImageClassification
-from dotenv import load_dotenv
-
-# =========================
-# Load environment variables (optional)
-# =========================
-load_dotenv()
 
 # =========================
 # Model configuration
 # =========================
 MODEL_ID = "shawnmichael/vit-fire-smoke-detection-v4"
+CONFIDENCE_THRESHOLD = 0.80
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -27,11 +21,10 @@ model.eval()
 # =========================
 # FastAPI App
 # =========================
-app = FastAPI(title="Fire & Smoke Detection API (Local)")
+app = FastAPI(title="Fire Detection API (Local)")
 
 
 def run_local_inference(image_bytes: bytes):
-    """Blocking local PyTorch inference"""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
     inputs = processor(images=image, return_tensors="pt")
@@ -43,8 +36,9 @@ def run_local_inference(image_bytes: bytes):
 
     results = []
     for idx, score in enumerate(probs):
+        label = model.config.id2label[idx]
         results.append({
-            "label": model.config.id2label[idx],
+            "class": label,
             "confidence": round(score.item(), 4)
         })
 
@@ -54,7 +48,6 @@ def run_local_inference(image_bytes: bytes):
 
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
-    # Validate uploaded file
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Uploaded file must be an image")
 
@@ -63,19 +56,16 @@ async def detect(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     try:
-        results = await asyncio.to_thread(run_local_inference, image_bytes)
+        predictions = await asyncio.to_thread(run_local_inference, image_bytes)
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Local inference failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # Optional: simple fire decision
-    top = results[0]
-    fire_detected = top["label"].lower() in ["fire", "smoke"]
+    detections = []
+
+    top = predictions[0]
+    if top["class"].lower() in ["fire", "smoke"] and top["confidence"] >= CONFIDENCE_THRESHOLD:
+        detections.append(top)
 
     return {
-        "fire_detected": fire_detected,
-        "top_prediction": top,
-        "all_predictions": results
+        "detections": detections
     }

@@ -5,9 +5,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from PIL import Image
 from transformers import AutoImageProcessor, AutoModelForImageClassification
 
-# =========================
-# Model configuration
-# =========================
+
 MODEL_ID = "shawnmichael/vit-fire-smoke-detection-v4"
 CONFIDENCE_THRESHOLD = 0.80
 
@@ -18,9 +16,6 @@ model = AutoModelForImageClassification.from_pretrained(MODEL_ID)
 model.to(device)
 model.eval()
 
-# =========================
-# FastAPI App
-# =========================
 app = FastAPI(title="Fire Detection API (Local)")
 
 
